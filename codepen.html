@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodePen Clone</title>
+
+  <!-- CodeMirror Library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/material.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/neo.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/javascript/javascript.min.js"></script>
+
+  <style>
+    /* General styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f5f5f5;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Header */
+    header {
+      background-color: #333;
+      color: #fff;
+      padding: 15px;
+      font-size: 1.8rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      right: 20px;
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* Editors Section */
+    .editor-container {
+      display: flex;
+      flex: 3;
+      gap: 10px;
+      padding: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+    }
+
+    .editor {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      margin-bottom: 20px; /* Added gap */
+    }
+
+    .editor label {
+      background-color: #444;
+      color: #fff;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .CodeMirror {
+      height: 350px; /* Increased height */
+    }
+
+    /* Output Section */
+    .output-container {
+      flex: 1;
+      position: relative;
+      padding: 10px;
+      margin-top: 5px; /* Gap above output box */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #444;
+      color: #fff;
+      padding: 8px;
+      width: 100%;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+
+    .output-header span {
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    iframe {
+      width: 100%;
+      border: none;
+      height: 150px; /* Default height */
+      transition: all 0.3s ease;
+    }
+
+    /* Fullscreen Output */
+    .output-container.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      background-color: #fff;
+    }
+
+    .output-container.fullscreen iframe {
+      height: calc(100% - 50px); /* Adjust iframe height within fullscreen */
+    }
+
+    .output-container.fullscreen .output-header {
+      border-radius: 0; /* Remove rounded corners in fullscreen */
+    }
+
+    .expand-btn, .shrink-btn {
+      background-color: #555;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .shrink-btn {
+      display: none;
+    }
+
+    /* Dark Mode */
+    body.dark {
+      background-color: #2b2b2b;
+      color: #e0e0e0;
+    }
+
+     header {
+       background-color: #000; /* Black background */
+       color: #fff; /* White text */
+     }
+
+      /* Input boxes and textareas in dark mode */
+      body.dark textarea,
+      body.dark input {
+        background-color: #000; /* Black background inside the input box */
+        color: #fff; /* White text */
+        border: 1px solid #555; /* Add a subtle border for visibility */
+     }
+
+      /* Normal mode input box styling */
+      textarea,
+      input {
+        background-color: #fff; /* Default white background */
+        color: #000; /* Default black text */
+        border: 1px solid #ccc; /* Default border */
+     }
+
+    /* Editor labels and output headers */
+    .editor label, 
+    .output-header {
+       background-color: #444; /* Dark gray background for editors and output in normal mode */
+       color: #fff; /* White text */
+    }
+
+    body.dark .editor label, body.dark .output-header {
+      background-color: #555;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    CodePen
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+  </header>
+
+  <!-- Editors Section -->
+  <div class="editor-container">
+    <div class="editor">
+      <label>HTML</label>
+      <textarea id="html-editor"></textarea>
+    </div>
+    <div class="editor">
+      <label>CSS</label>
+      <textarea id="css-editor"></textarea>
+    </div>
+    <div class="editor">
+      <label>JavaScript</label>
+      <textarea id="js-editor"></textarea>
+    </div>
+  </div>
+
+  <!-- Output Section -->
+  <div class="output-container" id="output-container">
+    <div class="output-header">
+      <span>Output</span>
+      <button class="expand-btn" onclick="expandOutput()">Expand</button>
+      <button class="shrink-btn" onclick="shrinkOutput()">Shrink</button>
+    </div>
+    <iframe id="output"></iframe>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // CodeMirror initialization
+    const htmlEditor = CodeMirror.fromTextArea(document.getElementById('html-editor'), {
+      mode: 'htmlmixed',
+      theme: 'neo',
+      lineNumbers: true,
+    });
+
+    const cssEditor = CodeMirror.fromTextArea(document.getElementById('css-editor'), {
+      mode: 'css',
+      theme: 'neo',
+      lineNumbers: true,
+    });
+
+    const jsEditor = CodeMirror.fromTextArea(document.getElementById('js-editor'), {
+      mode: 'javascript',
+      theme: 'neo',
+      lineNumbers: true,
+    });
+
+    const outputFrame = document.getElementById('output');
+    const outputContainer = document.getElementById('output-container');
+    const themeToggleBtn = document.querySelector('.theme-toggle');
+    let isDark = false;
+
+    // Update the Output
+    function updateOutput() {
+      const htmlCode = htmlEditor.getValue();
+      const cssCode = `<style>${cssEditor.getValue()}</style>`;
+      const jsCode = `<script>${jsEditor.getValue()}<\/script>`;
+
+      const outputDoc = outputFrame.contentDocument || outputFrame.contentWindow.document;
+      outputDoc.open();
+      outputDoc.write(htmlCode + cssCode + jsCode);
+      outputDoc.close();
+    }
+
+    htmlEditor.on('change', updateOutput);
+    cssEditor.on('change', updateOutput);
+    jsEditor.on('change', updateOutput);
+
+    // Dark Mode
+    function toggleTheme() {
+      isDark = !isDark;
+      document.body.classList.toggle('dark');
+      themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Expand and Shrink Output
+    function expandOutput() {
+      outputContainer.classList.add('fullscreen');
+      document.querySelector('.expand-btn').style.display = 'none';
+      document.querySelector('.shrink-btn').style.display = 'inline-block';
+    }
+
+    function shrinkOutput() {
+      outputContainer.classList.remove('fullscreen');
+      document.querySelector('.expand-btn').style.display = 'inline-block';
+      document.querySelector('.shrink-btn').style.display = 'none';
+    }
+
+    updateOutput(); // Initialize output
+  </script>
+</body>
+</html>
